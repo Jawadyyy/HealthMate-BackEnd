@@ -1,0 +1,34 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Doctor } from './schemas/doctor.schema/doctor.schema';
+import { CreateDoctorDto } from './dto/create-doctor.dto';
+import { UpdateDoctorDto } from './dto/update-doctor.dto';
+
+@Injectable()
+export class DoctorsService {
+  constructor(
+    @InjectModel(Doctor.name)
+    private doctorModel: Model<Doctor>,
+  ) {}
+
+  async create(userId: string, dto: CreateDoctorDto) {
+    return this.doctorModel.create({ userId, ...dto });
+  }
+
+  async getDoctorByUser(userId: string) {
+    return this.doctorModel.findOne({ userId });
+  }
+
+  async update(userId: string, dto: UpdateDoctorDto) {
+    return this.doctorModel.findOneAndUpdate({ userId }, dto, { new: true });
+  }
+
+  async getAllDoctors() {
+    return this.doctorModel.find();
+  }
+
+  async getDoctorById(id: string) {
+    return this.doctorModel.findById(id);
+  }
+}
