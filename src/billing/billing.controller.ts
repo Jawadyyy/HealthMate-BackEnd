@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch, UseGuards, Req } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
@@ -27,6 +27,12 @@ export class BillingController {
   @Get('invoice/doctor/:id')
   getDoctorInvoices(@Param('id') doctorId: string) {
     return this.billingService.getInvoicesByDoctor(doctorId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('invoice/:id')
+  getInvoiceById(@Param('id') id: string, @Req() req) {
+    return this.billingService.getInvoiceById(id, req.user.userId, req.user.role);
   }
 
   @UseGuards(JwtAuthGuard)

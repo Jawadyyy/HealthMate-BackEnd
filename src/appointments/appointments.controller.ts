@@ -34,6 +34,7 @@ export class AppointmentsController {
   updateAppointment(@Param('id') id: string, @Body() body: UpdateAppointmentDto) {
     return this.appointmentService.update(id, body);
   }
+  
 
   @UseGuards(JwtAuthGuard)
   @Patch('cancel/:id')
