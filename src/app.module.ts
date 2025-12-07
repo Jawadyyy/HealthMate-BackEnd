@@ -7,6 +7,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PatientsModule } from './patients/patients.module';
 import { DoctorsModule } from './doctors/doctors.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { MedicalRecordsModule } from './medical-records/medical-records.module';
+import { BillingModule } from './billing/billing.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { AppointmentsModule } from './appointments/appointments.module';
     PatientsModule,
     DoctorsModule,
     AppointmentsModule,
+    MedicalRecordsModule,
+    BillingModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
