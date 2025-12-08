@@ -12,7 +12,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(data: any) {
+  // ROLE-BASED REGISTRATION
+  async register(data: any, role: 'patient' | 'doctor' | 'admin') {
     const { name, email, password } = data;
 
     const exists = await this.userModel.findOne({ email });
@@ -24,22 +25,28 @@ export class AuthService {
       name,
       email,
       password: hashed,
+      role,
     });
 
-    return { message: 'User registered', user };
+    return { message: `${role} registered`, user };
   }
 
-  async login(data: any) {
+  // ROLE-BASED LOGIN
+  async login(data: any, role: 'patient' | 'doctor' | 'admin') {
     const { email, password } = data;
 
     const user = await this.userModel.findOne({ email });
     if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    if (user.role !== role) {
+      throw new UnauthorizedException(`This user is not a ${role}`);
+    }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException('Invalid password');
 
     const token = this.jwtService.sign({ id: user._id, role: user.role });
 
-    return { message: 'Login successful', token };
+    return { message: `${role} login successful`, token };
   }
 }

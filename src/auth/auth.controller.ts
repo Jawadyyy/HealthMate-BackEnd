@@ -1,43 +1,89 @@
-import { Controller,Post,Body,Get,Req,UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto/register.dto';
 import { LoginDto } from './dto/login.dto/login.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from './jwt/jwt.guard';
-import { RoleGuard } from './role/role.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorator/roles_decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'Register a new user' })
-  @Post('register')
-  register(@Body() body: RegisterDto) {
-    return this.authService.register(body);
+  // ---------------------- REGISTRATION ----------------------
+  @ApiOperation({ summary: 'Register a new patient' })
+  @Post('register/patient')
+  registerPatient(@Body() body: RegisterDto) {
+    return this.authService.register(body, 'patient');
   }
 
-  @ApiOperation({ summary: 'Login' })
-  @Post('login')
-  login(@Body() body: LoginDto) {
-    return this.authService.login(body);
+  @ApiOperation({ summary: 'Register a new doctor' })
+  @Post('register/doctor')
+  registerDoctor(@Body() body: RegisterDto) {
+    return this.authService.register(body, 'doctor');
   }
 
-  // Protected route
+  @ApiOperation({ summary: 'Register a new admin' })
+  @Post('register/admin')
+  registerAdmin(@Body() body: RegisterDto) {
+    return this.authService.register(body, 'admin');
+  }
+
+  // ---------------------- LOGIN ----------------------
+  @ApiOperation({ summary: 'Patient login' })
+  @Post('login/patient')
+  loginPatient(@Body() body: LoginDto) {
+    return this.authService.login(body, 'patient');
+  }
+
+  @ApiOperation({ summary: 'Doctor login' })
+  @Post('login/doctor')
+  loginDoctor(@Body() body: LoginDto) {
+    return this.authService.login(body, 'doctor');
+  }
+
+  @ApiOperation({ summary: 'Admin login' })
+  @Post('login/admin')
+  loginAdmin(@Body() body: LoginDto) {
+    return this.authService.login(body, 'admin');
+  }
+
+  // ---------------------- PROFILE ----------------------
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current logged-in user (Requires Bearer Token)' })
+  @ApiOperation({ summary: 'Get current logged-in user' })
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getProfile(@Req() req) {
     return req.user;
   }
 
-  // Admin-only Route
+  // ---------------------- ROLE TEST ROUTES ----------------------
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Admin test route (Only Admin can access)' })
-  @UseGuards(JwtAuthGuard, new RoleGuard(['admin']))
+  @ApiOperation({ summary: 'Admin-only route' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @Get('admin-test')
   adminCheck() {
     return { message: 'Admin access granted' };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Doctor-only route' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('doctor')
+  @Get('doctor-test')
+  doctorCheck() {
+    return { message: 'Doctor access granted' };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Patient-only route' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('patient')
+  @Get('patient-test')
+  patientCheck() {
+    return { message: 'Patient access granted' };
   }
 }
