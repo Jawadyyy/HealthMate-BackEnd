@@ -1,10 +1,21 @@
-import { Controller, Post, Body, Req, UseGuards, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Get,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto/create-patient.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../auth/decorator/roles_decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
-@ApiTags("Patients")
+@ApiTags('Patients')
 @ApiBearerAuth()
 @Controller('patients')
 export class PatientsController {
@@ -20,5 +31,28 @@ export class PatientsController {
   @Get('me')
   getMyPatientProfile(@Req() req) {
     return this.patientsService.getPatientByUser(req.user.id);
+  }
+
+  @Get('all')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  getAllPatients() {
+    return this.patientsService.getAllPatients();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  getPatientById(@Param('id') id: string, @Req() req) {
+    return this.patientsService.getPatientById(
+      id,
+      req.user.id,
+      req.user.role,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update')
+  updateProfile(@Req() req, @Body() dto: CreatePatientDto) {
+    return this.patientsService.updateProfile(req.user.id, dto);
   }
 }

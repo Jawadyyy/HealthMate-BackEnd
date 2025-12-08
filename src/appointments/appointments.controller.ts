@@ -1,9 +1,11 @@
-import { Controller, Post, Body, Req, UseGuards, Get, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Req, UseGuards, Get, Patch, Param, Delete } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../auth/decorator/roles_decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiTags("Appointments")
 @ApiBearerAuth()
@@ -34,11 +36,18 @@ export class AppointmentsController {
   updateAppointment(@Param('id') id: string, @Body() body: UpdateAppointmentDto) {
     return this.appointmentService.update(id, body);
   }
-  
 
   @UseGuards(JwtAuthGuard)
   @Patch('cancel/:id')
   cancelAppointment(@Param('id') id: string) {
     return this.appointmentService.cancel(id);
+  }
+
+  // 🔥 NEW — DELETE Appointment (Admin Only)
+  @Delete(':id')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  deleteAppointment(@Param('id') id: string) {
+    return this.appointmentService.deleteAppointment(id);
   }
 }

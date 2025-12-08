@@ -48,4 +48,12 @@ export class AppointmentsService {
     if (!appointment) throw new NotFoundException('Appointment not found');
     return appointment;
   }
+
+  async deleteAppointment(id: string) {
+  const appt = await this.appointmentModel.findById(id);
+  if (!appt) throw new NotFoundException('Appointment not found');
+
+  return this.appointmentModel.deleteOne({ _id: id });
+}
+
 }
