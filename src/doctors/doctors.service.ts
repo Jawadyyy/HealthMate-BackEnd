@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Doctor } from './schemas/doctor.schema/doctor.schema';
@@ -30,5 +34,21 @@ export class DoctorsService {
 
   async getDoctorById(id: string) {
     return this.doctorModel.findById(id);
+  }
+
+  async deleteDoctor(id: string, userId: string, role: string) {
+    const doctor = await this.doctorModel.findById(id);
+    if (!doctor) throw new NotFoundException('Doctor not found');
+
+    if (role !== 'admin' && !doctor.userId.equals(userId)) {
+      throw new ForbiddenException('You are not allowed to delete this profile');
+    }
+
+    await this.doctorModel.findByIdAndDelete(id);
+
+    return {
+      message: 'Doctor profile deleted successfully',
+      deletedId: id,
+    };
   }
 }

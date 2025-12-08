@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+  import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { Invoice } from './schemas/invoice.schema/invoice.schema';
 
 @Injectable()
@@ -27,13 +31,10 @@ export class BillingService {
       .populate('patientId', 'name');
   }
 
-  /** ⭐ GET invoice by ID (admin / patient / doctor) */
   async getInvoiceById(id: string, userId: string, role: string) {
     const invoice = await this.invoiceModel.findById(id);
-
     if (!invoice) throw new NotFoundException('Invoice not found');
 
-    // Security Check -> Only Admin / Doctor assigned / Patient belonging
     if (
       role !== 'admin' &&
       invoice.patientId.toString() !== userId &&
@@ -52,5 +53,25 @@ export class BillingService {
 
     if (!invoice) throw new NotFoundException('Invoice not found');
     return invoice;
+  }
+
+  async deleteInvoice(id: string, userId: string, role: string) {
+    const invoice = await this.invoiceModel.findById(id);
+    if (!invoice) throw new NotFoundException('Invoice not found');
+
+    if (
+      role !== 'admin' &&
+      invoice.patientId.toString() !== userId &&
+      invoice.doctorId.toString() !== userId
+    ) {
+      throw new ForbiddenException('You are not allowed to delete this invoice');
+    }
+
+    await this.invoiceModel.findByIdAndDelete(id);
+
+    return {
+      message: 'Invoice deleted successfully',
+      deletedInvoiceId: id,
+    };
   }
 }

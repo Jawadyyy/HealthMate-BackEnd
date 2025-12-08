@@ -1,11 +1,21 @@
-import { Controller, Post, Body, Req, UseGuards, Get, Patch, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Get,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { DoctorsService } from './doctors.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@ApiTags("Doctors")
+@ApiTags('Doctors')
 @ApiBearerAuth()
 @Controller('doctors')
 export class DoctorsController {
@@ -39,5 +49,11 @@ export class DoctorsController {
   @Get(':id')
   getDoctorById(@Param('id') id: string) {
     return this.doctorsService.getDoctorById(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteDoctor(@Param('id') id: string, @Req() req) {
+    return this.doctorsService.deleteDoctor(id, req.user.id, req.user.role);
   }
 }

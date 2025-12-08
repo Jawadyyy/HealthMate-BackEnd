@@ -7,6 +7,7 @@ import {
   Get,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto } from './dto/create-patient.dto/create-patient.dto';
@@ -54,5 +55,11 @@ export class PatientsController {
   @Patch('update')
   updateProfile(@Req() req, @Body() dto: CreatePatientDto) {
     return this.patientsService.updateProfile(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deletePatient(@Param('id') id: string, @Req() req) {
+    return this.patientsService.deletePatient(id, req.user.id, req.user.role);
   }
 }

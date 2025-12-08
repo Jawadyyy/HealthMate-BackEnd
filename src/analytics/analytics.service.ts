@@ -17,17 +17,14 @@ export class AnalyticsService {
     @InjectModel(Patient.name) private patientModel: Model<Patient>,
   ) {}
 
-  // Total number of patients
   async totalPatients() {
     return this.patientModel.countDocuments();
   }
 
-  // Total number of doctors
   async totalDoctors() {
     return this.doctorModel.countDocuments();
   }
 
-  // Total appointments and breakdown by status
   async appointmentStats() {
     const total = await this.appointmentModel.countDocuments();
     const pending = await this.appointmentModel.countDocuments({ status: 'pending' });
@@ -38,14 +35,12 @@ export class AnalyticsService {
     return { total, pending, confirmed, cancelled, completed };
   }
 
-  // Revenue summary
   async revenueSummary() {
     const invoices = await this.invoiceModel.find({ status: 'paid' });
     const totalRevenue = invoices.reduce((sum, i) => sum + i.amount, 0);
     return { totalRevenue, paidInvoices: invoices.length };
   }
 
-  // Top doctors by number of appointments
   async topDoctors(limit = 5) {
     const result = await this.appointmentModel.aggregate([
       { $match: { status: 'completed' } },
@@ -67,7 +62,6 @@ export class AnalyticsService {
     return result;
   }
 
-  // Patient medical records trend (number of reports per month)
   async patientMedicalRecordTrend(patientId: string) {
     const result = await this.medicalRecordModel.aggregate([
       { $match: { patientId: patientId } },
@@ -80,6 +74,6 @@ export class AnalyticsService {
       { $sort: { "_id": 1 } }
     ]);
 
-    return result; // [{ _id: 1, count: 3 }, { _id: 2, count: 5 }, ...]
+    return result; 
   }
 }
