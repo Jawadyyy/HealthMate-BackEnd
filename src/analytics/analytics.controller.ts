@@ -1,47 +1,48 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
-import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@ApiTags("Analytics")
-@ApiBearerAuth()
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private analyticsService: AnalyticsService) {}
+  constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Get('total-patients')
   totalPatients() {
     return this.analyticsService.totalPatients();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('total-doctors')
   totalDoctors() {
     return this.analyticsService.totalDoctors();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('appointments')
   appointmentStats() {
     return this.analyticsService.appointmentStats();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('revenue')
   revenueSummary() {
     return this.analyticsService.revenueSummary();
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('top-doctors')
-  topDoctors(@Query('limit') limit?: number) {
-    return this.analyticsService.topDoctors(limit ? +limit : undefined);
+  topDoctors(@Query('limit') limit: string) {
+    return this.analyticsService.topDoctors(Number(limit) || 5);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('patient-trend/:patientId')
   patientMedicalRecordTrend(@Param('patientId') patientId: string) {
     return this.analyticsService.patientMedicalRecordTrend(patientId);
+  }
+
+  // === New Endpoints ===
+  @Get('patient-adherence/:patientId')
+  patientAdherence(@Param('patientId') patientId: string) {
+    return this.analyticsService.patientMissedAppointments(patientId);
+  }
+
+  @Get('disease-trends')
+  diseaseTrends(@Query('limit') limit: string) {
+    return this.analyticsService.diseaseTrends(Number(limit) || 5);
   }
 }
