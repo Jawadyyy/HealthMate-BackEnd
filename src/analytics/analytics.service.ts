@@ -17,7 +17,6 @@ export class AnalyticsService {
     @InjectModel(Patient.name) private patientModel: Model<Patient>,
   ) {}
 
-  // Existing methods
   async totalPatients() {
     return this.patientModel.countDocuments();
   }
@@ -78,19 +77,15 @@ export class AnalyticsService {
     return result; 
   }
 
-  // === New Methods ===
-
-  // 1. Patient adherence tracking (missed appointments)
   async patientMissedAppointments(patientId: string) {
     const missed = await this.appointmentModel.countDocuments({
       patientId,
-      status: 'missed', // Assuming status "missed" exists for missed appointments
+      status: 'missed', 
     });
     const total = await this.appointmentModel.countDocuments({ patientId });
     return { patientId, missed, total, adherenceRate: total > 0 ? ((total - missed) / total) * 100 : 0 };
   }
 
-  // 2. Disease trend tracking (most common diagnoses)
   async diseaseTrends(limit = 5) {
     const trends = await this.medicalRecordModel.aggregate([
       { $match: { diagnosis: { $exists: true, $ne: "" } } },
