@@ -55,8 +55,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current logged-in user' })
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@Req() req) {
-    return req.user;
+  async getProfile(@Req() req) {
+    // Get full user details from database instead of just JWT payload
+    const user = await this.authService.getUserById(req.user.id);
+    return {
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    };
   }
 
   // ---------------------- ROLE TEST ROUTES ----------------------

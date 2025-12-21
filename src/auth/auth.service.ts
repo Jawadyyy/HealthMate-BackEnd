@@ -49,4 +49,11 @@ export class AuthService {
 
     return { message: `${role} login successful`, token };
   }
+
+  // GET USER BY ID (for /auth/me endpoint)
+  async getUserById(userId: string) {
+    const user = await this.userModel.findById(userId).select('-password');
+    if (!user) throw new UnauthorizedException('User not found');
+    return user;
+  }
 }
