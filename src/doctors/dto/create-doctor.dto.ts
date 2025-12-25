@@ -19,6 +19,15 @@ export class CreateDoctorDto {
   @ApiProperty()
   experienceYears: number;
 
-  @ApiProperty({ type: [String], required: false })
+  @ApiProperty()
+  fee: number;
+
+  @ApiProperty({
+    type: [String],
+  })
+  availableDays: string[];
+
+  @ApiProperty({
+    type: [String],})
   availableSlots?: string[];
 }

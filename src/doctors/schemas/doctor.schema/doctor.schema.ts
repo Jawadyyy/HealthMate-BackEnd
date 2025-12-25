@@ -24,7 +24,13 @@ export class Doctor extends Document {
   @Prop()
   experienceYears: number;
 
-  @Prop({ default: [] })
+  @Prop({ required: true })
+  fee: number;
+
+  @Prop({ type: [String], default: [] })
+  availableDays: string[];
+
+  @Prop({ type: [String], default: [] })
   availableSlots: string[];
 }
 
