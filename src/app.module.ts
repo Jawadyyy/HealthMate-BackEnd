@@ -11,6 +11,7 @@ import { MedicalRecordsModule } from './medical-records/medical-records.module';
 import { BillingModule } from './billing/billing.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     BillingModule,
     NotificationsModule,
     AnalyticsModule,
+    PrescriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
