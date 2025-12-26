@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -16,7 +17,25 @@ export class BillingService {
   ) {}
 
   async createInvoice(dto: CreateInvoiceDto) {
-    return this.invoiceModel.create(dto);
+    // Validate patient ID
+    if (!dto.patientId || !Types.ObjectId.isValid(dto.patientId)) {
+      throw new BadRequestException('Invalid patient ID');
+    }
+    
+    // Validate doctor ID (it should always be present after controller logic)
+    if (!dto.doctorId || !Types.ObjectId.isValid(dto.doctorId)) {
+      throw new BadRequestException('Invalid doctor ID');
+    }
+
+    // Convert string IDs to ObjectIds
+    const invoiceData = {
+      patientId: new Types.ObjectId(dto.patientId),
+      doctorId: new Types.ObjectId(dto.doctorId),
+      serviceName: dto.serviceName,
+      amount: dto.amount,
+    };
+
+    return this.invoiceModel.create(invoiceData);
   }
 
   async getInvoicesByPatient(patientId: string) {
@@ -64,21 +83,36 @@ export class BillingService {
     return invoice;
   }
 
-  async updatePayment(invoiceId: string, dto: UpdatePaymentDto) {
+  async updatePayment(invoiceId: string, dto: UpdatePaymentDto, userId: string, role: string) {
     if (!Types.ObjectId.isValid(invoiceId)) {
       throw new NotFoundException('Invalid invoice ID');
     }
 
-    const invoice = await this.invoiceModel.findByIdAndUpdate(invoiceId, dto, {
-      new: true,
-    });
-
+    const invoice = await this.invoiceModel.findById(invoiceId);
     if (!invoice) {
       throw new NotFoundException('Invoice not found');
     }
-    
-    return invoice;
-  }
+
+    // Authorization check
+    const invoicePatientId = invoice.patientId?.toString();
+    const invoiceDoctorId = invoice.doctorId?.toString();
+
+    if (
+      role !== 'admin' &&
+      invoicePatientId !== userId &&
+      invoiceDoctorId !== userId
+    ) {
+      throw new ForbiddenException('You are not allowed to update this invoice');
+    }
+
+    const updatedInvoice = await this.invoiceModel.findByIdAndUpdate(
+      invoiceId,
+      dto,
+      { new: true }
+    );
+
+    return updatedInvoice;
+}
 
   async deleteInvoice(id: string, userId: string, role: string) {
     if (!Types.ObjectId.isValid(id)) {

@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   Delete,
+  ForbiddenException,
 } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -17,48 +18,66 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Billing & Payments')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('billing')
 export class BillingController {
   constructor(private billingService: BillingService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post('invoice/create')
   createInvoice(@Body() body: CreateInvoiceDto, @Req() req) {
-  // automatically assign doctorId if logged-in user is a doctor
-    if (req.user.role === 'doctor') {
+    // Only doctors and admins can create invoices
+    if (req.user.role !== 'doctor' && req.user.role !== 'admin') {
+      throw new ForbiddenException('Only doctors and admins can create invoices');
+    }
+    
+    // Automatically assign doctorId if not provided or if logged-in user is a doctor
+    if (!body.doctorId || req.user.role === 'doctor') {
       body.doctorId = req.user.userId;
     }
+    
     return this.billingService.createInvoice(body);
   }
 
-
-  @UseGuards(JwtAuthGuard)
   @Get('invoice/patient/:id')
-  getPatientInvoices(@Param('id') patientId: string) {
+  getPatientInvoices(@Param('id') patientId: string, @Req() req) {
+    // Patients can only view their own invoices
+    if (req.user.role === 'patient' && req.user.userId !== patientId) {
+      throw new ForbiddenException('You can only view your own invoices');
+    }
     return this.billingService.getInvoicesByPatient(patientId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('invoice/doctor/:id')
-  getDoctorInvoices(@Param('id') doctorId: string) {
+  getDoctorInvoices(@Param('id') doctorId: string, @Req() req) {
+    // Only doctors and admins can access this endpoint
+    if (req.user.role !== 'doctor' && req.user.role !== 'admin') {
+      throw new ForbiddenException('Only doctors and admins can view doctor invoices');
+    }
+    
+    // Doctors can only view their own invoices unless admin
+    if (req.user.role === 'doctor' && req.user.userId !== doctorId) {
+      throw new ForbiddenException('You can only view your own invoices');
+    }
+    
     return this.billingService.getInvoicesByDoctor(doctorId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('invoice/:id')
   getInvoiceById(@Param('id') id: string, @Req() req) {
     return this.billingService.getInvoiceById(id, req.user.userId, req.user.role);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch('invoice/payment/:id')
-  updatePayment(@Param('id') id: string, @Body() body: UpdatePaymentDto) {
-    return this.billingService.updatePayment(id, body);
+  updatePayment(@Param('id') id: string, @Body() body: UpdatePaymentDto, @Req() req) {
+    return this.billingService.updatePayment(id, body, req.user.userId, req.user.role);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('invoice/:id')
   deleteInvoice(@Param('id') id: string, @Req() req) {
+    // Only admins can delete invoices
+    if (req.user.role !== 'admin') {
+      throw new ForbiddenException('Only admins can delete invoices');
+    }
     return this.billingService.deleteInvoice(id, req.user.userId, req.user.role);
   }
 }
