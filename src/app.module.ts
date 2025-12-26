@@ -12,6 +12,7 @@ import { BillingModule } from './billing/billing.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PrescriptionsModule } from './prescriptions/prescriptions.module';
     NotificationsModule,
     AnalyticsModule,
     PrescriptionsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
