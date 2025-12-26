@@ -30,9 +30,12 @@ export class BillingController {
       throw new ForbiddenException('Only doctors and admins can create invoices');
     }
     
+    // Get user ID - handle both userId and id fields
+    const userId = req.user.userId || req.user.id;
+    
     // Automatically assign doctorId if not provided or if logged-in user is a doctor
     if (!body.doctorId || req.user.role === 'doctor') {
-      body.doctorId = req.user.userId;
+      body.doctorId = userId;
     }
     
     return this.billingService.createInvoice(body);
@@ -40,8 +43,13 @@ export class BillingController {
 
   @Get('invoice/patient/:id')
   getPatientInvoices(@Param('id') patientId: string, @Req() req) {
+    // Get user ID - handle both userId and id fields
+    const userId = req.user.userId || req.user.id;
+    
+    console.log('Patient endpoint - Token user ID:', userId, 'Param ID:', patientId, 'Role:', req.user.role);
+    
     // Patients can only view their own invoices
-    if (req.user.role === 'patient' && req.user.userId !== patientId) {
+    if (req.user.role === 'patient' && userId !== patientId) {
       throw new ForbiddenException('You can only view your own invoices');
     }
     return this.billingService.getInvoicesByPatient(patientId);
@@ -49,13 +57,18 @@ export class BillingController {
 
   @Get('invoice/doctor/:id')
   getDoctorInvoices(@Param('id') doctorId: string, @Req() req) {
+    // Get user ID - handle both userId and id fields
+    const userId = req.user.userId || req.user.id;
+    
+    console.log('Doctor endpoint - Token user ID:', userId, 'Param ID:', doctorId, 'Role:', req.user.role);
+    
     // Only doctors and admins can access this endpoint
     if (req.user.role !== 'doctor' && req.user.role !== 'admin') {
       throw new ForbiddenException('Only doctors and admins can view doctor invoices');
     }
     
     // Doctors can only view their own invoices unless admin
-    if (req.user.role === 'doctor' && req.user.userId !== doctorId) {
+    if (req.user.role === 'doctor' && userId !== doctorId) {
       throw new ForbiddenException('You can only view your own invoices');
     }
     
@@ -64,12 +77,16 @@ export class BillingController {
 
   @Get('invoice/:id')
   getInvoiceById(@Param('id') id: string, @Req() req) {
-    return this.billingService.getInvoiceById(id, req.user.userId, req.user.role);
+    // Get user ID - handle both userId and id fields
+    const userId = req.user.userId || req.user.id;
+    return this.billingService.getInvoiceById(id, userId, req.user.role);
   }
 
   @Patch('invoice/payment/:id')
   updatePayment(@Param('id') id: string, @Body() body: UpdatePaymentDto, @Req() req) {
-    return this.billingService.updatePayment(id, body, req.user.userId, req.user.role);
+    // Get user ID - handle both userId and id fields
+    const userId = req.user.userId || req.user.id;
+    return this.billingService.updatePayment(id, body, userId, req.user.role);
   }
 
   @Delete('invoice/:id')
@@ -78,6 +95,9 @@ export class BillingController {
     if (req.user.role !== 'admin') {
       throw new ForbiddenException('Only admins can delete invoices');
     }
-    return this.billingService.deleteInvoice(id, req.user.userId, req.user.role);
+    
+    // Get user ID - handle both userId and id fields
+    const userId = req.user.userId || req.user.id;
+    return this.billingService.deleteInvoice(id, userId, req.user.role);
   }
 }
