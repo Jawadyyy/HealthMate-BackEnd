@@ -23,9 +23,14 @@ export class BillingController {
 
   @UseGuards(JwtAuthGuard)
   @Post('invoice/create')
-  createInvoice(@Body() body: CreateInvoiceDto) {
+  createInvoice(@Body() body: CreateInvoiceDto, @Req() req) {
+  // automatically assign doctorId if logged-in user is a doctor
+    if (req.user.role === 'doctor') {
+      body.doctorId = req.user.userId;
+    }
     return this.billingService.createInvoice(body);
   }
+
 
   @UseGuards(JwtAuthGuard)
   @Get('invoice/patient/:id')

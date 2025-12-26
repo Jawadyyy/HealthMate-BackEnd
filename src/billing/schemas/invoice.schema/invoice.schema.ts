@@ -10,15 +10,15 @@ export enum PaymentStatus {
 
 @Schema({ timestamps: true })
 export class Invoice extends Document {
-
   @Prop({ type: Types.ObjectId, ref: 'Patient', required: true })
   patientId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Doctor', required: true })
-  doctorId: Types.ObjectId;
+  // Make doctorId optional
+  @Prop({ type: Types.ObjectId, ref: 'Doctor', required: false })
+  doctorId?: Types.ObjectId;
 
   @Prop({ required: true })
-  serviceName: string;  // e.g. "Consultation"
+  serviceName: string;
 
   @Prop({ required: true })
   amount: number;
@@ -27,10 +27,10 @@ export class Invoice extends Document {
   status: PaymentStatus;
 
   @Prop({ required: false })
-  paymentMethod: string; // e.g. "Cash", "Card", "Online"
+  paymentMethod?: string;
 
   @Prop()
-  transactionId?: string; 
+  transactionId?: string;
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(Invoice);

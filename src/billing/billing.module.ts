@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { BillingController } from './billing.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Invoice, InvoiceSchema } from './schemas/invoice.schema/invoice.schema';
+import { Invoice, InvoiceSchema } from './schemas/invoice.schema/invoice.schema'; // Fixed path
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
