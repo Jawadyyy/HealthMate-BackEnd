@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
@@ -12,7 +16,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  // ROLE-BASED REGISTRATION
+  // ---------------- REGISTER ----------------
   async register(data: any, role: 'patient' | 'doctor' | 'admin') {
     const { name, email, password } = data;
 
@@ -31,7 +35,7 @@ export class AuthService {
     return { message: `${role} registered`, user };
   }
 
-  // ROLE-BASED LOGIN
+  // ---------------- LOGIN ----------------
   async login(data: any, role: 'patient' | 'doctor' | 'admin') {
     const { email, password } = data;
 
@@ -45,14 +49,62 @@ export class AuthService {
     const match = await bcrypt.compare(password, user.password);
     if (!match) throw new UnauthorizedException('Invalid password');
 
-    const token = this.jwtService.sign({ id: user._id, role: user.role });
+    const token = this.jwtService.sign({
+      id: user._id,
+      role: user.role,
+    });
 
     return { message: `${role} login successful`, token };
   }
 
-  // GET USER BY ID (for /auth/me endpoint)
+  // ---------------- FORGOT PASSWORD ----------------
+  async forgotPassword(email: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) throw new BadRequestException('User not found');
+
+    // TEMP SOLUTION:
+    // In real apps → send email with token
+    const resetToken = this.jwtService.sign(
+      { id: user._id },
+      { expiresIn: '15m' },
+    );
+
+    return {
+      message: 'Password reset token generated',
+      resetToken,
+    };
+  }
+
+  // ---------------- CHANGE PASSWORD ----------------
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const match = await bcrypt.compare(oldPassword, user.password);
+    if (!match) throw new UnauthorizedException('Old password is incorrect');
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return { message: 'Password changed successfully' };
+  }
+
+  // ---------------- LOGOUT ----------------
+  async logout() {
+    // JWT is stateless → logout handled on frontend
+    return { message: 'Logout successful' };
+  }
+
+  // ---------------- GET USER ----------------
   async getUserById(userId: string) {
-    const user = await this.userModel.findById(userId).select('-password');
+    const user = await this.userModel
+      .findById(userId)
+      .select('-password');
+
     if (!user) throw new UnauthorizedException('User not found');
     return user;
   }
