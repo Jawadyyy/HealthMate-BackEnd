@@ -15,46 +15,77 @@ export class PatientsService {
     private patientModel: Model<Patient>,
   ) {}
 
+  // CREATE PATIENT
   async create(userId: string, dto: CreatePatientDto) {
     return this.patientModel.create({ userId, ...dto });
   }
 
+  // GET LOGGED-IN PATIENT PROFILE
   async getPatientByUser(userId: string) {
-    return this.patientModel.findOne({ userId });
+    return this.patientModel
+      .findOne({ userId })
+      .populate('userId', 'name email role');
   }
 
+  // GET ALL PATIENTS (ADMIN)
   async getAllPatients() {
-    return this.patientModel.find();
+    return this.patientModel
+      .find()
+      .populate('userId', 'name email role');
   }
 
+  // GET PATIENT BY ID
   async getPatientById(id: string, userId: string, role: string) {
-    const patient = await this.patientModel.findById(id);
-    if (!patient) throw new NotFoundException('Patient not found');
+    const patient = await this.patientModel
+      .findById(id)
+      .populate('userId', 'name email role');
 
-    if (role !== 'admin' && role !== 'doctor' && !patient.userId.equals(userId)) {
-      throw new ForbiddenException('You are not allowed to view this profile');
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+
+    if (
+      role !== 'admin' &&
+      role !== 'doctor' &&
+      !patient.userId['_id'].equals(userId)
+    ) {
+      throw new ForbiddenException(
+        'You are not allowed to view this profile',
+      );
     }
 
     return patient;
   }
 
+  // UPDATE PATIENT PROFILE
   async updateProfile(userId: string, dto: CreatePatientDto) {
-    const updated = await this.patientModel.findOneAndUpdate(
-      { userId },
-      dto,
-      { new: true },
-    );
-    if (!updated) throw new NotFoundException('Profile not found');
+    const updated = await this.patientModel
+      .findOneAndUpdate({ userId }, dto, { new: true })
+      .populate('userId', 'name email role');
+
+    if (!updated) {
+      throw new NotFoundException('Profile not found');
+    }
+
     return updated;
   }
 
-  // 🚀 DELETE PATIENT PROFILE
+  // DELETE PATIENT PROFILE
   async deletePatient(id: string, userId: string, role: string) {
     const patient = await this.patientModel.findById(id);
-    if (!patient) throw new NotFoundException('Patient not found');
 
-    if (role !== 'admin' && role !== 'doctor' && !patient.userId.equals(userId)) {
-      throw new ForbiddenException('You are not allowed to delete this profile');
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+
+    if (
+      role !== 'admin' &&
+      role !== 'doctor' &&
+      !patient.userId.equals(userId)
+    ) {
+      throw new ForbiddenException(
+        'You are not allowed to delete this profile',
+      );
     }
 
     await this.patientModel.findByIdAndDelete(id);
