@@ -189,11 +189,11 @@ export class PrescriptionsController {
       let filteredPrescriptions = prescriptions;
       if (req.user.role === 'patient') {
         filteredPrescriptions = prescriptions.filter(
-          p => p.patientId.toString() === req.user.id
+          p => p.patientId && p.patientId.toString() === req.user.id
         );
       } else if (req.user.role === 'doctor') {
         filteredPrescriptions = prescriptions.filter(
-          p => p.doctorId.toString() === req.user.id
+          p => p.doctorId && p.doctorId.toString() === req.user.id
         );
       }
 
@@ -221,13 +221,21 @@ export class PrescriptionsController {
         prescriptionId
       );
 
+      // Check if populated fields exist before accessing them
+      if (!prescription.patientId || !prescription.doctorId) {
+        throw new HttpException(
+          'Prescription has missing patient or doctor information',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+
       if (req.user.role === 'patient' && 
-          prescription.patientId.toString() !== req.user.id) {
+          prescription.patientId._id.toString() !== req.user.id) {
         throw new HttpException('Unauthorized access', HttpStatus.FORBIDDEN);
       }
 
       if (req.user.role === 'doctor' && 
-          prescription.doctorId.toString() !== req.user.id) {
+          prescription.doctorId._id.toString() !== req.user.id) {
         throw new HttpException('Unauthorized access', HttpStatus.FORBIDDEN);
       }
 
@@ -263,7 +271,14 @@ export class PrescriptionsController {
         prescriptionId
       );
 
-      if (existingPrescription.doctorId.toString() !== req.user.id) {
+      if (!existingPrescription.doctorId) {
+        throw new HttpException(
+          'Prescription has missing doctor information',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      if (existingPrescription.doctorId._id.toString() !== req.user.id) {
         throw new HttpException(
           'Unauthorized to update this prescription',
           HttpStatus.FORBIDDEN
@@ -300,8 +315,15 @@ export class PrescriptionsController {
         prescriptionId
       );
 
+      if (!prescription.doctorId) {
+        throw new HttpException(
+          'Prescription has missing doctor information',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+
       if (req.user.role === 'doctor' && 
-          prescription.doctorId.toString() !== req.user.id) {
+          prescription.doctorId._id.toString() !== req.user.id) {
         throw new HttpException(
           'Unauthorized to cancel this prescription',
           HttpStatus.FORBIDDEN
@@ -337,8 +359,15 @@ export class PrescriptionsController {
         prescriptionId
       );
 
+      if (!prescription.patientId) {
+        throw new HttpException(
+          'Prescription has missing patient information',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+
       if (req.user.role === 'patient' && 
-          prescription.patientId.toString() !== req.user.id) {
+          prescription.patientId._id.toString() !== req.user.id) {
         throw new HttpException(
           'Unauthorized to request refill',
           HttpStatus.FORBIDDEN
@@ -381,8 +410,15 @@ export class PrescriptionsController {
         prescriptionId
       );
 
+      if (!prescription.doctorId) {
+        throw new HttpException(
+          'Prescription has missing doctor information',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+
       if (req.user.role === 'doctor' && 
-          prescription.doctorId.toString() !== req.user.id) {
+          prescription.doctorId._id.toString() !== req.user.id) {
         throw new HttpException(
           'Unauthorized to delete this prescription',
           HttpStatus.FORBIDDEN

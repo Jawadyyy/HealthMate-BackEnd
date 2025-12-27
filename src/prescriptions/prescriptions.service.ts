@@ -28,14 +28,27 @@ export class PrescriptionsService {
     }
 
     const newPrescription = new this.prescriptionModel(prescriptionData);
-    return await newPrescription.save();
+    const savedPrescription = await newPrescription.save();
+    
+    // Populate after saving to return complete data
+    const populatedPrescription = await this.prescriptionModel
+      .findById(savedPrescription._id)
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
+      .exec();
+
+    if (!populatedPrescription) {
+      throw new NotFoundException('Failed to retrieve created prescription');
+    }
+
+    return populatedPrescription;
   }
 
   async getPrescriptionsByDoctor(doctorId: string): Promise<Prescription[]> {
     return await this.prescriptionModel
       .find({ doctorId })
-      .populate('patientId', 'firstName lastName email phoneNumber')
-      .populate('doctorId', 'firstName lastName specialization')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }
@@ -43,8 +56,8 @@ export class PrescriptionsService {
   async getPrescriptionsByPatient(patientId: string): Promise<Prescription[]> {
     return await this.prescriptionModel
       .find({ patientId })
-      .populate('patientId', 'firstName lastName email')
-      .populate('doctorId', 'firstName lastName specialization')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }
@@ -52,8 +65,8 @@ export class PrescriptionsService {
   async getPrescriptionById(prescriptionId: string): Promise<Prescription> {
     const prescription = await this.prescriptionModel
       .findById(prescriptionId)
-      .populate('patientId', 'firstName lastName email phoneNumber')
-      .populate('doctorId', 'firstName lastName specialization')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .exec();
 
     if (!prescription) {
@@ -66,8 +79,8 @@ export class PrescriptionsService {
   async getAllPrescriptions(): Promise<Prescription[]> {
     return await this.prescriptionModel
       .find()
-      .populate('patientId', 'firstName lastName email')
-      .populate('doctorId', 'firstName lastName specialization')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }
@@ -78,8 +91,8 @@ export class PrescriptionsService {
   ): Promise<Prescription> {
     const updatedPrescription = await this.prescriptionModel
       .findByIdAndUpdate(prescriptionId, updatePrescriptionDto, { new: true })
-      .populate('patientId', 'firstName lastName email')
-      .populate('doctorId', 'firstName lastName specialization')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .exec();
 
     if (!updatedPrescription) {
@@ -122,6 +135,11 @@ export class PrescriptionsService {
       throw new BadRequestException('Prescription has expired');
     }
 
+    // Check if prescription is active
+    if (prescription.status !== 'active') {
+      throw new BadRequestException('Prescription is not active');
+    }
+
     // Increment refills used
     return await this.updatePrescription(prescriptionId, {
       refillsUsed: prescription.refillsUsed + 1
@@ -133,8 +151,8 @@ export class PrescriptionsService {
   async getPrescriptionsByStatus(status: string): Promise<Prescription[]> {
     return await this.prescriptionModel
       .find({ status })
-      .populate('patientId', 'firstName lastName')
-      .populate('doctorId', 'firstName lastName')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }
@@ -142,7 +160,8 @@ export class PrescriptionsService {
   async getActivePrescriptionsByPatient(patientId: string): Promise<Prescription[]> {
     return await this.prescriptionModel
       .find({ patientId, status: 'active' })
-      .populate('doctorId', 'firstName lastName specialization')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }
@@ -154,8 +173,8 @@ export class PrescriptionsService {
         expiryDate: { $lt: now },
         status: 'active'
       })
-      .populate('patientId', 'firstName lastName')
-      .populate('doctorId', 'firstName lastName')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .exec();
   }
 
@@ -167,8 +186,8 @@ export class PrescriptionsService {
         nextRefillDate: { $lte: now },
         $expr: { $lt: ['$refillsUsed', '$refills'] }
       })
-      .populate('patientId', 'firstName lastName email')
-      .populate('doctorId', 'firstName lastName')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .exec();
   }
 
@@ -181,8 +200,8 @@ export class PrescriptionsService {
           { 'medications.name': { $regex: searchTerm, $options: 'i' } }
         ]
       })
-      .populate('patientId', 'firstName lastName')
-      .populate('doctorId', 'firstName lastName')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }
@@ -218,8 +237,8 @@ export class PrescriptionsService {
           $lte: endDate
         }
       })
-      .populate('patientId', 'firstName lastName')
-      .populate('doctorId', 'firstName lastName')
+      .populate('patientId', 'name email role')
+      .populate('doctorId', 'name email role')
       .sort({ prescriptionDate: -1 })
       .exec();
   }

@@ -21,10 +21,12 @@ class Medication {
 
 @Schema({ timestamps: true })
 export class Prescription extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Patient', required: true })
+  // Changed ref from 'Patient' to 'User'
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   patientId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Doctor', required: true })
+  // Changed ref from 'Doctor' to 'User'
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   doctorId: Types.ObjectId;
 
   @Prop({ type: [Medication], required: true })
