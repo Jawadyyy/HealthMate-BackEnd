@@ -21,13 +21,13 @@ export class MedicalRecordsService {
   }
 
   async getRecordsByPatient(patientId: string): Promise<MedicalRecord[]> {
-    return await this.medicalRecordModel
-      .find({ patientId })
-      .populate('patientId', 'firstName lastName email')
-      .populate('doctorId', 'firstName lastName specialization')
-      .sort({ date: -1 })
-      .exec();
-  }
+  return await this.medicalRecordModel
+    .find({ patientId })
+    .populate('patientId', 'firstName lastName email name')
+    .populate('doctorId', 'firstName lastName specialization name email phone hospital')
+    .sort({ date: -1 })
+    .exec();
+}
 
   async getRecordsByDoctor(doctorId: string): Promise<MedicalRecord[]> {
     return await this.medicalRecordModel

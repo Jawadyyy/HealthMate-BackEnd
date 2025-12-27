@@ -31,10 +31,12 @@ class Attachment {
 
 @Schema({ timestamps: true })
 export class MedicalRecord extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Patient', required: true })
+  // CHANGE 'Patient' to 'User'
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   patientId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Doctor', required: true })
+  // CHANGE 'Doctor' to 'User'  
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   doctorId: Types.ObjectId;
 
   @Prop({ 
@@ -49,8 +51,8 @@ export class MedicalRecord extends Document {
   @Prop()
   description?: string;
 
-  @Prop({ required: true })
-  diagnosis: string;
+  @Prop()
+  diagnosis?: string; // Made optional since not all records need diagnosis
 
   @Prop()
   treatment?: string;
