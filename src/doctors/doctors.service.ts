@@ -18,47 +18,54 @@ export class DoctorsService {
 
   // Create doctor profile
   async create(userId: string, dto: CreateDoctorDto) {
-  console.log('Received DTO:', dto);
-  console.log('Fee value:', dto.fee);
-  console.log('Fee type:', typeof dto.fee);
-  
-  const doctorData = {
-    userId,
-    ...dto
-  };
-  
-  console.log('Doctor data to save:', doctorData);
-  
-  return this.doctorModel.create(doctorData);
-}
+    return this.doctorModel.create({
+      userId: new Types.ObjectId(userId),
+      ...dto,
+    });
+  }
 
-  // Get doctor by userId
+  // Get logged-in doctor's profile
   async getDoctorByUser(userId: string) {
-    return this.doctorModel.findOne({ userId: new Types.ObjectId(userId) });
+    return this.doctorModel
+      .findOne({ userId: new Types.ObjectId(userId) })
+      .populate('userId', 'name email role');
   }
 
   // Update doctor profile
   async update(userId: string, dto: UpdateDoctorDto) {
-    return this.doctorModel.findOneAndUpdate(
-      { userId: new Types.ObjectId(userId) },
-      dto,
-      { new: true },
-    );
+    return this.doctorModel
+      .findOneAndUpdate(
+        { userId: new Types.ObjectId(userId) },
+        dto,
+        { new: true },
+      )
+      .populate('userId', 'name email role');
   }
 
   // Get all doctors
   async getAllDoctors() {
-    return this.doctorModel.find();
+    return this.doctorModel
+      .find()
+      .populate('userId', 'name email role');
   }
 
   // Get doctor by ID
   async getDoctorById(id: string) {
-    return this.doctorModel.findById(id);
+    const doctor = await this.doctorModel
+      .findById(id)
+      .populate('userId', 'name email role');
+
+    if (!doctor) {
+      throw new NotFoundException('Doctor not found');
+    }
+
+    return doctor;
   }
 
   // Delete doctor profile
   async deleteDoctor(id: string, userId: string, role: string) {
     const doctor = await this.doctorModel.findById(id);
+
     if (!doctor) throw new NotFoundException('Doctor not found');
 
     if (role !== 'admin' && !doctor.userId.equals(userId)) {
