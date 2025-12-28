@@ -4,9 +4,9 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { Patient } from './schemas/patient.schema/patient.schema';
 import { CreatePatientDto } from './dto/create-patient.dto/create-patient.dto';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class PatientsService {
@@ -21,11 +21,40 @@ export class PatientsService {
   }
 
   // GET LOGGED-IN PATIENT PROFILE
-  async getPatientByUser(userId: string) {
-    return this.patientModel
-      .findOne({ userId })
-      .populate('userId', 'name email role');
+  // GET LOGGED-IN PATIENT PROFILE
+async getPatientByUser(userId: string) {
+  console.log('✅ NEW CODE - Looking for patient with userId:', userId);
+  
+  // Use aggregation to bypass any auto-populate middleware
+  const patients = await this.patientModel.aggregate([
+    {
+      $match: {
+        $or: [
+          { userId: new Types.ObjectId(userId) },
+          { 'userId._id': userId }
+        ]
+      }
+    },
+    { $limit: 1 }
+  ]);
+
+  const patient = patients[0];
+  
+  console.log('✅ NEW CODE - Patient found:', patient ? 'YES' : 'NO');
+
+  if (!patient) {
+    throw new NotFoundException(
+      'Patient profile not found. Please complete your profile first.'
+    );
   }
+
+  // If userId is still populated as object, replace it with just the ID
+  if (patient.userId && typeof patient.userId === 'object' && patient.userId._id) {
+    patient.userId = patient.userId._id;
+  }
+
+  return patient;
+}
 
   // GET ALL PATIENTS (ADMIN)
   async getAllPatients() {
@@ -58,18 +87,57 @@ export class PatientsService {
   }
 
   // UPDATE PATIENT PROFILE
-  async updateProfile(userId: string, dto: CreatePatientDto) {
-    const updated = await this.patientModel
-      .findOneAndUpdate({ userId }, dto, { new: true })
-      .populate('userId', 'name email role');
+  // UPDATE PATIENT PROFILE
+async updateProfile(userId: string, dto: CreatePatientDto) {
+  console.log('✅ Updating profile for userId:', userId);
+  
+  try {
+    // Use aggregation to find the patient document
+    const existingPatients = await this.patientModel.aggregate([
+      {
+        $match: {
+          $or: [
+            { userId: new Types.ObjectId(userId) },
+            { 'userId._id': userId }
+          ]
+        }
+      },
+      { $limit: 1 }
+    ]);
 
-    if (!updated) {
-      throw new NotFoundException('Profile not found');
+    if (existingPatients.length > 0) {
+      // Remove _id and __v from dto to prevent immutable field error
+      const { _id, __v, createdAt, ...updateData } = dto as any;
+      
+      // Update using findByIdAndUpdate
+      const updated = await this.patientModel
+        .findByIdAndUpdate(
+          existingPatients[0]._id,
+          { 
+            ...updateData,
+            userId: new Types.ObjectId(userId) // Explicitly set userId as ObjectId
+          },
+          { new: true }
+        )
+        .lean()
+        .exec();
+      
+      console.log('✅ Profile updated successfully');
+      return updated;
+    } else {
+      // Create new profile
+      console.log('✅ Creating new profile');
+      const created = await this.patientModel.create({ 
+        userId: new Types.ObjectId(userId), 
+        ...dto 
+      });
+      return created.toObject();
     }
-
-    return updated;
+  } catch (error) {
+    console.error('❌ Error in updateProfile:', error);
+    throw error;
   }
-
+}
   // DELETE PATIENT PROFILE
   async deletePatient(id: string, userId: string, role: string) {
     const patient = await this.patientModel.findById(id);
