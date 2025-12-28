@@ -26,10 +26,29 @@ export class DoctorsService {
 
   // Get logged-in doctor's profile
   async getDoctorByUser(userId: string) {
-    return this.doctorModel
-      .findOne({ userId: new Types.ObjectId(userId) })
+  console.log('Looking for doctor with userId:', userId);
+  
+  // Try with ObjectId first
+  let doctor = await this.doctorModel
+    .findOne({ userId: new Types.ObjectId(userId) })
+    .populate('userId', 'name email role');
+  
+  console.log('Found with ObjectId:', doctor);
+  
+  // If not found, try with string
+  if (!doctor) {
+    doctor = await this.doctorModel
+      .findOne({ userId: userId })
       .populate('userId', 'name email role');
+    console.log('Found with string:', doctor);
   }
+  
+  if (!doctor) {
+    throw new NotFoundException('Doctor profile not found');
+  }
+  
+  return doctor;
+}
 
   // Update doctor profile
   async update(userId: string, dto: UpdateDoctorDto) {
