@@ -1,27 +1,44 @@
+// dto/create-patient.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNumber, IsArray, IsOptional, Min, Max } from 'class-validator';
 
 export class CreatePatientDto {
-  @ApiProperty()
+  @ApiProperty({ })
+  @IsString()
+  fullName: string;
+
+  @ApiProperty({ example: 25 })
+  @IsNumber()
+  @Min(0)
+  @Max(150)
   age: number;
 
-  @ApiProperty()
+  @ApiProperty({ })
+  @IsString()
   gender: string;
 
-  @ApiProperty()
+  @ApiProperty({  })
+  @IsString()
   bloodGroup: string;
 
-  @ApiProperty()
+  @ApiProperty({ })
+  @IsString()
   phone: string;
 
-  @ApiProperty()
+  @ApiProperty({ })
+  @IsString()
   address: string;
 
-  @ApiProperty()
+  @ApiProperty({ })
+  @IsString()
   emergencyContactName: string;
 
-  @ApiProperty()
+  @ApiProperty({ })
+  @IsString()
   emergencyContactPhone: string;
 
-  @ApiProperty({ type: [String] })
-  medicalConditions: string[];
+  @ApiProperty({ type: [String], example: ['Asthma', 'Diabetes'], required: false })
+  @IsArray()
+  @IsOptional()
+  medicalConditions?: string[];
 }

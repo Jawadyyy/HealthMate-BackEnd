@@ -1,3 +1,4 @@
+// patients.service.ts
 import {
   Injectable,
   NotFoundException,
@@ -21,7 +22,7 @@ export class PatientsService {
     console.log('✅ Creating patient with userId (string):', userId);
     console.log('✅ Creating patient with dto:', dto);
 
-    // ⚠️ CRITICAL FIX: Convert string userId to ObjectId
+    // Convert string userId to ObjectId
     const userObjectId = new Types.ObjectId(userId);
     console.log('✅ Converted to ObjectId:', userObjectId);
 
@@ -35,10 +36,18 @@ export class PatientsService {
       throw new ConflictException('Patient profile already exists for this user');
     }
 
-    // Create with ObjectId userId
+    // Create with ObjectId userId - using fullName instead of name/email
     const newPatient = await this.patientModel.create({ 
-      userId: userObjectId, // Use ObjectId instead of string
-      ...dto 
+      userId: userObjectId,
+      fullName: dto.fullName,
+      age: dto.age,
+      gender: dto.gender,
+      bloodGroup: dto.bloodGroup,
+      phone: dto.phone,
+      address: dto.address,
+      emergencyContactName: dto.emergencyContactName,
+      emergencyContactPhone: dto.emergencyContactPhone,
+      medicalConditions: dto.medicalConditions || []
     });
 
     console.log('✅ Patient created successfully:', newPatient);
@@ -53,9 +62,10 @@ export class PatientsService {
     const userObjectId = new Types.ObjectId(userId);
     console.log('✅ Converted to ObjectId:', userObjectId);
 
-    // Simple findOne with ObjectId - no need for complex aggregation
+    // Populate userId to get name and email from User collection
     const patient = await this.patientModel
       .findOne({ userId: userObjectId })
+      .populate('userId', 'name email role')
       .lean()
       .exec();
 
@@ -91,7 +101,6 @@ export class PatientsService {
       throw new NotFoundException('Patient not found');
     }
 
-    // Type assertion for populated userId
     const populatedUserId = patient.userId as any;
 
     if (
@@ -111,11 +120,9 @@ export class PatientsService {
   async updateProfile(userId: string, dto: CreatePatientDto) {
     console.log('✅ Updating profile for userId:', userId);
     
-    // Convert string to ObjectId
     const userObjectId = new Types.ObjectId(userId);
     
     try {
-      // Find existing patient
       const existingPatient = await this.patientModel
         .findOne({ userId: userObjectId })
         .lean()
@@ -124,27 +131,41 @@ export class PatientsService {
       if (existingPatient) {
         console.log('✅ Found existing patient, updating...');
         
-        // Update existing patient
         const updated = await this.patientModel
           .findByIdAndUpdate(
             existingPatient._id,
             { 
-              ...dto,
-              userId: userObjectId // Ensure userId stays as ObjectId
+              fullName: dto.fullName,
+              age: dto.age,
+              gender: dto.gender,
+              bloodGroup: dto.bloodGroup,
+              phone: dto.phone,
+              address: dto.address,
+              emergencyContactName: dto.emergencyContactName,
+              emergencyContactPhone: dto.emergencyContactPhone,
+              medicalConditions: dto.medicalConditions || []
             },
             { new: true, runValidators: true }
           )
+          .populate('userId', 'name email role')
           .lean()
           .exec();
         
         console.log('✅ Profile updated successfully');
         return updated;
       } else {
-        // Create new profile if doesn't exist
         console.log('✅ No existing profile found, creating new one...');
         const created = await this.patientModel.create({ 
-          userId: userObjectId, 
-          ...dto 
+          userId: userObjectId,
+          fullName: dto.fullName,
+          age: dto.age,
+          gender: dto.gender,
+          bloodGroup: dto.bloodGroup,
+          phone: dto.phone,
+          address: dto.address,
+          emergencyContactName: dto.emergencyContactName,
+          emergencyContactPhone: dto.emergencyContactPhone,
+          medicalConditions: dto.medicalConditions || []
         });
         
         console.log('✅ Profile created successfully');
@@ -167,7 +188,6 @@ export class PatientsService {
       throw new NotFoundException('Patient not found');
     }
 
-    // Convert both to strings for comparison
     if (
       role !== 'admin' &&
       role !== 'doctor' &&

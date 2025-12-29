@@ -1,3 +1,4 @@
+// schemas/patient.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
@@ -6,38 +7,34 @@ export class Patient extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  // 🔥 NEW FIELDS - Added for easier queries
   @Prop({ required: true })
-  name: string;
+  fullName: string;
 
   @Prop({ required: true })
-  email: string;
-
-  @Prop()
   age: number;
 
-  @Prop()
+  @Prop({ required: true })
   gender: string;
 
-  @Prop()
+  @Prop({ required: true })
   bloodGroup: string;
 
-  @Prop()
+  @Prop({ required: true })
   phone: string;
 
-  @Prop()
+  @Prop({ required: true })
   address: string;
 
-  @Prop()
+  @Prop({ required: true })
   emergencyContactName: string;
 
-  @Prop()
+  @Prop({ required: true })
   emergencyContactPhone: string;
 
-  @Prop([String])
+  @Prop({ type: [String], default: [] })
   medicalConditions: string[];
 
-  @Prop([String])
+  @Prop({ type: [String], default: [] })
   allergies: string[];
 }
 

@@ -62,12 +62,10 @@ export class AppointmentsService {
         ...appt.toObject(),
         patientId: patient ? {
           _id: patient._id,
-          name: patient.name, // ✅ Now directly from Patient schema
-          email: patient.email // ✅ Now directly from Patient schema
+          name: patient.fullName, 
         } : {
           _id: appt.patientId,
           name: 'Patient',
-          email: ''
         }
       };
     })
