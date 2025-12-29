@@ -19,6 +19,7 @@ import {
 import { JwtAuthGuard } from './jwt/jwt.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorator/roles_decorator';
+import { ResetPasswordDto } from './dto/reset-pass.dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -62,6 +63,13 @@ export class AuthController {
   @Post('forgot-password')
   forgotPassword(@Body() body: ForgotPasswordDto) {
     return this.authService.forgotPassword(body.email);
+  }
+
+  // ---------------- RESET PASSWORD (NEW) ----------------
+  @ApiOperation({ summary: 'Reset password using token' })
+  @Post('reset-password')
+  resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body.resetToken, body.newPassword);
   }
 
   // ---------------- CHANGE PASSWORD ----------------
