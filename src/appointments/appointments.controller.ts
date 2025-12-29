@@ -19,12 +19,21 @@ export class AppointmentsController {
     return this.appointmentService.create(req.user.id, body);
   }
 
+  // For patients to see their appointments
   @UseGuards(JwtAuthGuard)
   @Get('my')
   getMyAppointments(@Req() req) {
     return this.appointmentService.getAppointmentsByPatient(req.user.id);
   }
 
+  // 🔥 NEW - For doctors to see their own appointments
+  @UseGuards(JwtAuthGuard)
+  @Get('my-doctor-appointments')
+  getMyDoctorAppointments(@Req() req) {
+    return this.appointmentService.getAppointmentsByDoctor(req.user.id);
+  }
+
+  // For admin or specific doctor lookup by ID
   @UseGuards(JwtAuthGuard)
   @Get('doctor/:doctorId')
   getDoctorAppointments(@Param('doctorId') doctorId: string) {
@@ -43,7 +52,7 @@ export class AppointmentsController {
     return this.appointmentService.cancel(id);
   }
 
-  // 🔥 NEW — DELETE Appointment (Admin Only)
+  // DELETE Appointment (Admin Only)
   @Delete(':id')
   @Roles('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)

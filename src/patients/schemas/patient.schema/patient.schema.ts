@@ -6,6 +6,13 @@ export class Patient extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
+  // 🔥 NEW FIELDS - Added for easier queries
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  email: string;
+
   @Prop()
   age: number;
 
@@ -29,6 +36,9 @@ export class Patient extends Document {
 
   @Prop([String])
   medicalConditions: string[];
+
+  @Prop([String])
+  allergies: string[];
 }
 
 export const PatientSchema = SchemaFactory.createForClass(Patient);

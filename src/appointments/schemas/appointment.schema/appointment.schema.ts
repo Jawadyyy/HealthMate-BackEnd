@@ -10,11 +10,11 @@ export enum AppointmentStatus {
 
 @Schema({ timestamps: true })
 export class Appointment extends Document {
-  @Prop({ type: Types.ObjectId, ref: 'Patient', required: true })
-  patientId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, required: true }) // Remove ref, just store the ObjectId
+  patientId: Types.ObjectId; // This stores Patient.userId
 
-  @Prop({ type: Types.ObjectId, ref: 'Doctor', required: true })
-  doctorId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, required: true }) // Remove ref, just store the ObjectId
+  doctorId: Types.ObjectId; // This stores Doctor.userId
 
   @Prop({ required: true })
   appointmentDate: Date;
@@ -23,7 +23,7 @@ export class Appointment extends Document {
   status: AppointmentStatus;
 
   @Prop()
-  notes: string; // Optional notes for doctor
+  notes: string;
 }
 
 export const AppointmentSchema = SchemaFactory.createForClass(Appointment);
