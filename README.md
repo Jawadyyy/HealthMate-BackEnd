@@ -39,49 +39,94 @@ for patients, doctors, and administrators.
 
 ## 📁 Project Structure
 ```
-app/
-├── admin/            # Admin panel
-│   ├── dashboard
-│   ├── doctors
-│   ├── patients
-│   └── billing
+src/
+├── app.module.ts          # Root application module
+├── main.ts                # Application entry point
 │
-├── auth/             # Authentication flows
-│   ├── admin
-│   ├── doctor
-│   └── patient
+├── config/                # App & environment configuration
+│   ├── database.config.ts
+│   ├── jwt.config.ts
+│   └── app.config.ts
 │
-├── doctor/           # Doctor dashboard
-│   ├── appointments
-│   ├── patients
-│   ├── prescriptions
-│   ├── records
-│   └── profile
+├── auth/                  # Authentication & authorization
+│   ├── auth.module.ts
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── dto/
+│   │   ├── login.dto.ts
+│   │   └── register.dto.ts
+│   ├── strategies/        # JWT strategies
+│   │   └── jwt.strategy.ts
+│   └── guards/
+│       └── jwt-auth.guard.ts
 │
-├── patient/          # Patient dashboard
-│   ├── appointments
-│   ├── med-records
-│   ├── prescriptions
-│   └── profile
+├── users/                 # Base user module
+│   ├── users.module.ts
+│   ├── users.controller.ts
+│   ├── users.service.ts
+│   ├── schemas/           # DB schemas / entities
+│   │   └── user.schema.ts
+│   └── dto/
+│       └── update-user.dto.ts
 │
-├── layout.tsx        # Root layout
-└── page.tsx          # Landing page
+├── admin/                 # Admin features
+│   ├── admin.module.ts
+│   ├── admin.controller.ts
+│   ├── admin.service.ts
+│   ├── dto/
+│   └── analytics/
+│       └── analytics.service.ts
+│
+├── doctors/               # Doctor features
+│   ├── doctors.module.ts
+│   ├── doctors.controller.ts
+│   ├── doctors.service.ts
+│   ├── dto/
+│   └── schemas/
+│       └── doctor.schema.ts
+│
+├── patients/              # Patient features
+│   ├── patients.module.ts
+│   ├── patients.controller.ts
+│   ├── patients.service.ts
+│   ├── dto/
+│   └── schemas/
+│       └── patient.schema.ts
+│
+├── appointments/          # Appointment management
+│   ├── appointments.module.ts
+│   ├── appointments.controller.ts
+│   ├── appointments.service.ts
+│   ├── dto/
+│   └── schemas/
+│       └── appointment.schema.ts
+│
+├── prescriptions/         # Prescriptions & medicines
+│   ├── prescriptions.module.ts
+│   ├── prescriptions.controller.ts
+│   ├── prescriptions.service.ts
+│   └── schemas/
+│       └── prescription.schema.ts
+│
+├── medical-records/       # Digital health records
+│   ├── medical-records.module.ts
+│   ├── medical-records.controller.ts
+│   ├── medical-records.service.ts
+│   └── schemas/
+│       └── medical-record.schema.ts
 
-components/           # Shared UI components
-assets/               # Images & static assets
-
-lib/                  # Core logic
-├── api               # API calls
-├── auth              # Auth helpers
-├── hooks             # Custom hooks
-└── utils             # Utility functions
 
 ```
 
 ---
 
 ## ⚙️ Environment Variables
-
+```
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/healthmate
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
+```
 
 
 ---
@@ -105,17 +150,20 @@ npm install
 
 ### Run development server
 ```
-npm run dev
+npm run start:dev
 ```
 
 ---
 
 ### 🧪 Scripts
 ```
-npm run dev        # Start server with nodemon
+npm run start:dev     # Start development server (watch mode)
 ```
 ```
-npm run start      # Start production server
+npm run build         # Build project
+```
+```
+npm run start         # Start production server
 ```
 
 ---
